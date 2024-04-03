@@ -1,97 +1,76 @@
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
 
-const puck = {
-  x: 400,
-  y: 300,
-  vx: 5,
-  vy: 5
+// Размер игрового поля
+const WIDTH = canvas.width;
+const HEIGHT = canvas.height;
+
+// Параметры игры
+const PADDLE_SIZE = 100;
+const PUCK_SIZE = 20;
+const PUCK_SPEED = 5;
+
+// Объекты игры
+let puck = {
+  x: WIDTH / 2,
+  y: HEIGHT / 2,
+  vx: PUCK_SPEED,
+  vy: PUCK_SPEED
+};
+let paddle1 = {
+  x: WIDTH / 4,
+  y: HEIGHT / 2 - PADDLE_SIZE / 2
+};
+let paddle2 = {
+  x: 3 * WIDTH / 4,
+  y: HEIGHT / 2 - PADDLE_SIZE / 2
 };
 
-const player1 = {
-  x: 100,
-  y: 200
-};
+// Функция отрисовки
+function draw() {
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
-const player2 = {
-  x: 700,
-  y: 200
-};
+  // Отрисовка шайбы
+  ctx.beginPath();
+  ctx.arc(puck.x, puck.y, PUCK_SIZE, 0, Math.PI * 2);
+  ctx.fill();
 
+  // Отрисовка ракеток
+  ctx.fillRect(paddle1.x, paddle1.y, PADDLE_SIZE, 10);
+  ctx.fillRect(paddle2.x, paddle2.y, PADDLE_SIZE, 10);
+}
+
+// Функция обновления игры
 function update() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = "black";
-  ctx.fillRect(puck.x - 10, puck.y - 10, 20, 20);
-
-  ctx.fillStyle = "blue";
-  ctx.fillRect(player1.x - 50, player1.y - 25, 100, 50);
-  ctx.fillStyle = "red";
-  ctx.fillRect(player2.x - 50, player2.y - 25, 100, 50);
-
-  puck.x += puck.vx;
-  puck.y += puck.vy;
-
-  if (puck.x < 0 || puck.x > canvas.width) {
+  // Отражение шайбы от стенок
+  if (puck.x < 0 || puck.x > WIDTH) {
     puck.vx = -puck.vx;
   }
-  if (puck.y < 0 || puck.y > canvas.height) {
+  if (puck.y < 0 || puck.y > HEIGHT) {
     puck.vy = -puck.vy;
   }
 
-  if (puck.y > player1.y - 25 && puck.y < player1.y + 25 &&
-    (puck.x > player1.x - 50 && puck.x < player1.x + 50)) {
-    puck.vx = -puck.vx;
-  } else if (puck.y > player2.y - 25 && puck.y < player2.y + 25 &&
-    (puck.x > player2.x - 50 && puck.x < player2.x + 50)) {
-    puck.vx = -puck.vx;
+  // Столкновение шайбы с ракетками
+  if (puck.y < paddle1.y + PADDLE_SIZE && puck.x > paddle1.x - PUCK_SIZE && puck.x < paddle1.x + PADDLE_SIZE) {
+    puck.vx = PUCK_SPEED;
+  } else if (puck.y < paddle2.y + PADDLE_SIZE && puck.x > paddle2.x - PUCK_SIZE && puck.x < paddle2.x + PADDLE_SIZE) {
+    puck.vx = -PUCK_SPEED;
   }
 
-
-  if (puck.x < 0) {
-    updateScore(2);
-    resetPuck();
-  } else if (puck.x > canvas.width) {
-    updateScore(1);
-    resetPuck();
-  }
+  // Перемещение шайбы
+  puck.x += puck.vx;
+  puck.y += puck.vy;
 }
 
-function updateScore(player) {
-  const scoreElement = player === 1 ? document.getElementById("player1-score") : document.getElementById("player2-score");
-  const currentScore = parseInt(scoreElement.textContent);
-  scoreElement.textContent = currentScore + 1;
-}
-
-function resetPuck() {
-  puck.x = canvas.width / 2;
-  puck.y = canvas.height / 2;
-  puck.vx *= -1;
-  puck.vy = Math.random() * 2 - 1;
-}
-
+// Обработка событий
 document.addEventListener("keydown", function(event) {
-  switch (event.key) {
-    case "w":
-      player1.y -= 10;
-      break;
-    case "s":
-      player1.y += 10;
-      break;
-    case "Up":
-      player2.y -= 10;
-      break;
-    case "Down":
-      player2.y += 10;
-      break;
+  if (event.keyCode == 38) {
+    paddle1.y -= 20;
+  } else if (event.keyCode == 40) {
+    paddle1.y += 20;
   }
 });
 
-function animate() {
-  update();
-  requestAnimationFrame(animate);
-}
-
-animate();
-
-
+// Запуск игры
+setInterval(draw, 20);
+setInterval(update, 20);
